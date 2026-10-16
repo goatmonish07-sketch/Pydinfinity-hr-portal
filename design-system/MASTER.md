@@ -15,6 +15,7 @@ Built for Pydinfinity Solutions. Visual language and motion follow the **AuraPOS
 - Light: bg #eef0eb, surface #fcfcf9, surface-2 #f3f5f0, border #e0e3db, text #161b18, muted #5f6862.
 - Dark (Aura Forest): bg #0c110e, surface #141b17, surface-2 #1a231e, border #26322b, text #e8eee9, muted #98a59c.
   Alternatives: Charcoal, OLED Black, Skin-tinted.
+- Pydinfinity Blue skin (#1d4ed8 / #38bdf8): white surfaces in light (bg #f3f6fb, surface #fff); navy dark surface (bg #0a0f1a).
 - Radius: cards 26px, controls 16px, buttons/chips/search fully round. Shadows: `--shadow`, `--shadow-lift`.
 - Status pills: 8px radius, 1px border at 45% of the tone, 7% fill — always text + dot, never colour alone.
 - Charts: single series = primary (accent for trend line); categorical slots 1–3 (validated blue/orange/aqua).

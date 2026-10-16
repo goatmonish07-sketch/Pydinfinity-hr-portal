@@ -5,8 +5,8 @@ A premium, mobile-first HR web app for **Pydinfinity Solutions** — one unified
 
 - **AuraPOS design & motion** — floating rounded sidebar, glass top bar, drifting "aura" glow, gradient hero KPI with
   sheen sweep and live pulse, count-up numbers, bars that grow in, self-drawing trend line, sweeping gauge, hover lift
-- **Custom colour themes** — 8 skins stepped for light *and* dark (Aura Emerald default, Boutique Rose, Midnight, Ocean,
-  Sand, Berry, Violet, Graphite) **plus a custom brand-colour picker**
+- **Custom colour themes** — 9 skins stepped for light *and* dark (Aura Emerald default, **Pydinfinity Blue** — blue on
+  white with a navy dark mode — Boutique Rose, Midnight, Ocean, Sand, Berry, Violet, Graphite) **plus a custom brand-colour picker**
 - **Dark mode** — Light / Dark / System, with 4 dark styles: Aura Forest, Charcoal, OLED Black, Skin-tinted
 - Corner style (sharp / default / round); button text auto-switches for contrast
 - **Responsive** — sidebar ≥1024px; on mobile a slide-in drawer plus a floating 5-tab bar (safe-area aware)

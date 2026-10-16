@@ -17,6 +17,7 @@ export interface ThemePreset {
 
 export const PRESETS: ThemePreset[] = [
   { id: "emerald", name: "Aura Emerald", light: ["#266244", "#c9973f"], dark: ["#5cb080", "#e2b870"] },
+  { id: "pyd", name: "Pydinfinity Blue", light: ["#1d4ed8", "#38bdf8"], dark: ["#60a5fa", "#7dd3fc"] },
   { id: "rose", name: "Boutique Rose", light: ["#a04062", "#c8965a"], dark: ["#e480a4", "#e2b478"] },
   { id: "midnight", name: "Midnight", light: ["#4848a8", "#3f8ea3"], dark: ["#8c8cf0", "#78d2e4"] },
   { id: "ocean", name: "Ocean", light: ["#187084", "#c96f35"], dark: ["#56bed4", "#f0a878"] },
@@ -99,6 +100,7 @@ export function applyTheme(s: Pick<ThemeState, "mode" | "presetId" | "custom" | 
   const [primary, accent] = resolveColors(s, dark);
   root.dataset.mode = dark ? "dark" : "light";
   root.dataset.surface = s.surface;
+  root.dataset.skin = s.presetId;
   root.dataset.radius = s.radius;
   root.style.setProperty("--primary", primary);
   root.style.setProperty("--accent", accent);
@@ -122,4 +124,4 @@ export const useTheme = create<ThemeState>()(
 );
 
 /** Runs before first paint (inlined in <head>) so there's no flash of the wrong theme. */
-export const themeBootScript = `(function(){try{var P=${JSON.stringify(Object.fromEntries(PRESETS.map((p) => [p.id, [p.light, p.dark]])))};var r=document.documentElement;var raw=localStorage.getItem('${THEME_KEY}');var s=raw?JSON.parse(raw).state:{};var m=s.mode||'system';var d=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);r.dataset.mode=d?'dark':'light';r.dataset.surface=s.surface||'aura';r.dataset.radius=s.radius||'default';var p=P[s.presetId||'emerald'];var c=p?p[d?1:0]:(s.custom||null);if(c){r.style.setProperty('--primary',c[0]);r.style.setProperty('--accent',c[1]);}}catch(e){document.documentElement.dataset.mode='light';}})();`;
+export const themeBootScript = `(function(){try{var P=${JSON.stringify(Object.fromEntries(PRESETS.map((p) => [p.id, [p.light, p.dark]])))};var r=document.documentElement;var raw=localStorage.getItem('${THEME_KEY}');var s=raw?JSON.parse(raw).state:{};var m=s.mode||'system';var d=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);r.dataset.mode=d?'dark':'light';r.dataset.surface=s.surface||'aura';r.dataset.skin=s.presetId||'emerald';r.dataset.radius=s.radius||'default';var p=P[s.presetId||'emerald'];var c=p?p[d?1:0]:(s.custom||null);if(c){r.style.setProperty('--primary',c[0]);r.style.setProperty('--accent',c[1]);}}catch(e){document.documentElement.dataset.mode='light';}})();`;

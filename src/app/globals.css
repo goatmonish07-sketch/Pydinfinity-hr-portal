@@ -42,6 +42,31 @@
   --radius-card: 26px;
   color-scheme: light;
 }
+/* Pydinfinity Blue skin: crisp white surfaces in light mode */
+:root[data-skin="pyd"]:not([data-mode="dark"]) {
+  --bg: #f3f6fb;
+  --surface: #ffffff;
+  --surface-2: #f1f5fb;
+  --surface-3: #e7edf7;
+  --border: #e1e7f0;
+  --border-strong: #cdd6e3;
+  --text: #0f1b2d;
+  --text-2: #344256;
+  --muted: #5b6b80;
+  --shadow: 0 1px 2px rgba(15, 27, 45, 0.05), 0 10px 30px -14px rgba(29, 78, 216, 0.18);
+}
+/* …and a deep navy dark surface when dark mode uses the default style */
+:root[data-skin="pyd"][data-mode="dark"][data-surface="aura"] {
+  --bg: #0a0f1a;
+  --surface: #111827;
+  --surface-2: #172033;
+  --surface-3: #1e293b;
+  --border: #233047;
+  --border-strong: #31415c;
+  --text: #e8eef8;
+  --text-2: #c3cede;
+  --muted: #94a3b8;
+}
 :root[data-radius="sharp"] { --radius: 8px; --radius-card: 12px; }
 :root[data-radius="round"] { --radius: 20px; --radius-card: 32px; }
 
