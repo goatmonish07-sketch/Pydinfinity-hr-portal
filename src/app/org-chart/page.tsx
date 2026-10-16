@@ -38,7 +38,7 @@ export default function OrgChartPage() {
           ) : (
             <span className="w-8 shrink-0" />
           )}
-          <Link href={`/people/${p.id}`} className={cn("card flex min-w-0 flex-1 items-center gap-3 p-3 transition-shadow hover:shadow-lg sm:max-w-md", q && match(p) && "border-primary ring-2 ring-primary/20")}>
+          <Link href={`/people/view?id=${p.id}`} className={cn("card flex min-w-0 flex-1 items-center gap-3 p-3 transition-shadow hover:shadow-lg sm:max-w-md", q && match(p) && "border-primary ring-2 ring-primary/20")}>
             <Avatar person={p} size={40} />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">{fullName(p)}</span>

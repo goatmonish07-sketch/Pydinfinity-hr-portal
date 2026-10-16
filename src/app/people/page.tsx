@@ -20,13 +20,14 @@ export default function PeoplePage() {
   const departments = useHR((s) => s.settings.departments);
   const branches = useHR((s) => s.settings.branches);
   const log = useHR((s) => s.log);
+  const sideBranch = useHR((s) => s.branch);
   const router = useRouter();
 
   const [q, setQ] = useState("");
   const [type, setType] = useState<TypeFilter>((qp("type") as TypeFilter) || "all");
   const [status, setStatus] = useState<string>(qp("status") || "");
   const [dept, setDept] = useState("");
-  const [branch, setBranch] = useState("");
+  const [branch, setBranch] = useState(sideBranch === "All branches" ? "" : sideBranch);
   const [joinedAfter, setJoinedAfter] = useState("");
   const [view, setView] = useState<"grid" | "table">("table");
   const [showFilters, setShowFilters] = useState(false);
@@ -139,7 +140,7 @@ export default function PeoplePage() {
           {/* Mobile & grid view: cards */}
           <div className={cn("grid gap-3 sm:grid-cols-2 xl:grid-cols-3", view === "table" && "sm:hidden")}>
             {list.map((p) => (
-              <Link key={p.id} href={`/people/${p.id}`} className="card group flex flex-col p-4 transition-shadow hover:shadow-lg">
+              <Link key={p.id} href={`/people/view?id=${p.id}`} className="card group flex flex-col p-4 transition-shadow hover:shadow-lg">
                 <div className="flex items-start gap-3">
                   <Avatar person={p} size={48} />
                   <div className="min-w-0 flex-1">
@@ -179,9 +180,9 @@ export default function PeoplePage() {
                   </thead>
                   <tbody>
                     {list.map((p) => (
-                      <tr key={p.id} className="cursor-pointer" onClick={() => router.push(`/people/${p.id}`)}>
+                      <tr key={p.id} className="cursor-pointer" onClick={() => router.push(`/people/view?id=${p.id}`)}>
                         <td>
-                          <Link href={`/people/${p.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                          <Link href={`/people/view?id=${p.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                             <Avatar person={p} size={36} />
                             <span className="min-w-0">
                               <span className="block truncate font-medium hover:text-primary">{fullName(p)}</span>
@@ -210,7 +211,7 @@ export default function PeoplePage() {
         </>
       )}
 
-      {adding && <PersonFormModal open onClose={() => setAdding(false)} onSaved={(id) => router.push(`/people/${id}`)} />}
+      {adding && <PersonFormModal open onClose={() => setAdding(false)} onSaved={(id) => router.push(`/people/view?id=${id}`)} />}
     </div>
   );
 }

@@ -58,10 +58,14 @@ export interface Toast {
 interface HRState extends SeedData {
   settings: Settings;
   role: Role;
+  branch: string; // "All branches" or a branch name — sidebar switcher
+  readAlerts: string[];
   letters: { id: string; personId: string; template: string; date: string; signed: boolean }[];
   toasts: Toast[];
 
   setRole: (r: Role) => void;
+  setBranch: (b: string) => void;
+  markAlertsRead: (ids: string[]) => void;
   toast: (title: string, tone?: Toast["tone"]) => void;
   dismissToast: (id: string) => void;
   log: (action: AuditEntry["action"], target: string) => void;
@@ -115,6 +119,8 @@ const fresh = () => ({
   ...buildSeed(),
   settings: DEFAULT_SETTINGS,
   role: "Super Admin" as Role,
+  branch: "All branches",
+  readAlerts: [] as string[],
   letters: [],
   toasts: [],
 });
@@ -142,6 +148,8 @@ export const useHR = create<HRState>()(
         ...fresh(),
 
         setRole: (role) => set({ role }),
+        setBranch: (branch) => set({ branch }),
+        markAlertsRead: (ids) => set((s) => ({ readAlerts: [...new Set([...s.readAlerts, ...ids])].slice(-400) })),
         toast: (title, tone = "success") => {
           const id = uid("toast");
           set((s) => ({ toasts: [...s.toasts, { id, title, tone }] }));
@@ -392,7 +400,8 @@ export const useHR = create<HRState>()(
     },
     {
       name: "pyd-hr-data",
-      version: 1,
+      version: 3,
+      migrate: () => fresh() as never,
       partialize: ({ toasts: _t, ...rest }) => rest,
     }
   )

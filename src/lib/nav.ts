@@ -28,7 +28,7 @@ export interface NavItem {
   short?: string;
   icon: LucideIcon;
   perm?: Permission;
-  phase?: 1 | 2 | 3;
+  badge?: "approvals" | "kyc" | "leave" | "onboarding" | "invoices";
 }
 
 export const NAV: { group: string; items: NavItem[] }[] = [
@@ -37,18 +37,18 @@ export const NAV: { group: string; items: NavItem[] }[] = [
     group: "People",
     items: [
       { href: "/people", label: "People Directory", short: "People", icon: Users },
-      { href: "/ids", label: "Employee IDs", short: "IDs", icon: IdCard, perm: "ids.issue" },
-      { href: "/documents", label: "Documents & KYC", short: "KYC", icon: ShieldCheck },
+      { href: "/ids", label: "Employee IDs", short: "IDs", icon: IdCard, perm: "ids.issue", badge: "approvals" },
+      { href: "/documents", label: "Documents & KYC", short: "KYC", icon: ShieldCheck, badge: "kyc" },
       { href: "/interns", label: "Interns", icon: GraduationCap, perm: "intern.feedback" },
-      { href: "/freelancers", label: "Freelancers", icon: Briefcase, perm: "people.viewAll" },
+      { href: "/freelancers", label: "Freelancers", icon: Briefcase, perm: "people.viewAll", badge: "invoices" },
       { href: "/org-chart", label: "Org Chart", short: "Org", icon: Network },
     ],
   },
   {
     group: "Operations",
     items: [
-      { href: "/onboarding", label: "Onboarding", icon: ClipboardCheck, perm: "people.manage" },
-      { href: "/attendance", label: "Attendance & Leave", short: "Leave", icon: CalendarCheck },
+      { href: "/onboarding", label: "Onboarding", icon: ClipboardCheck, perm: "people.manage", badge: "onboarding" },
+      { href: "/attendance", label: "Attendance & Leave", short: "Leave", icon: CalendarCheck, badge: "leave" },
       { href: "/letters", label: "Letters", icon: FileSignature },
       { href: "/assets", label: "Assets", icon: Laptop, perm: "people.manage" },
       { href: "/offboarding", label: "Offboarding", icon: DoorOpen, perm: "people.manage" },
@@ -73,4 +73,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
   },
 ];
 
-export const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
+export const isActive = (path: string, href: string) => {
+  const h = href.split("?")[0];
+  return h === "/" ? path === "/" : path === h || path.startsWith(h + "/");
+};

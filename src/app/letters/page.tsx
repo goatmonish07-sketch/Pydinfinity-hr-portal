@@ -112,7 +112,7 @@ export default function LettersPage() {
                 <div><p className="font-[family-name:var(--font-display)] text-xl font-bold">{company}</p><p className="text-xs opacity-85">{branches.filter((b) => b !== "Remote").join(" · ")}</p></div>
               </div>
             </header>
-            <div className="px-8 py-8 text-[14px] leading-7 sm:px-12">
+            <div className="px-8 py-8 font-serif text-[14.5px] leading-7 sm:px-12">
               <div className="flex flex-wrap justify-between gap-2 text-xs text-[#6b7280]"><span>Ref: {ref}</span><span>Date: {fmtDate(todayISO(), { day: "numeric", month: "long", year: "numeric" })}</span></div>
               {!["certificate", "experience", "contract"].includes(template.id) && (
                 <p className="mt-6">{fullName(person)}<br /><span className="text-[#4b5563]">{person.address}</span></p>

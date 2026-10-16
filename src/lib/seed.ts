@@ -130,6 +130,8 @@ export function buildSeed(): SeedData {
 
   // Leadership & managers
   const ceo = mk(1, "employee", "Operations", "Founder & CEO", { joiningDate: addDays(today, -2100), ctc: 4_800_000 });
+  // The Super Admin demo user is the portal owner
+  Object.assign(ceo, { firstName: "Monish", lastName: "Kumar", email: "monish.kumar@pydinfinity.com", gender: "Other" as const });
   const hrHead = mk(2, "employee", "Human Resources", "Head of People", { joiningDate: addDays(today, -1800), managerId: ceo.id, ctc: 2_200_000 });
   const engMgr = mk(3, "employee", "Engineering", "Engineering Manager", { joiningDate: addDays(today, -1600), managerId: ceo.id, ctc: 3_000_000 });
   const designLead = mk(4, "employee", "Design", "Design Lead", { joiningDate: addDays(today, -1300), managerId: ceo.id, ctc: 2_000_000 });

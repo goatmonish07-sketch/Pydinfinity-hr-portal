@@ -42,7 +42,7 @@ export default function OnboardingPage() {
               <div className="flex items-center gap-3 border-b border-line p-4">
                 <Avatar person={p} size={44} />
                 <div className="min-w-0 flex-1">
-                  <Link href={`/people/${p.id}`} className="block truncate font-semibold hover:text-primary">{fullName(p)}</Link>
+                  <Link href={`/people/view?id=${p.id}`} className="block truncate font-semibold hover:text-primary">{fullName(p)}</Link>
                   <p className="truncate text-xs text-muted">{p.designation} · joins {fmtDate(p.joiningDate)}</p>
                 </div>
                 <StatusBadge status={p.status} />

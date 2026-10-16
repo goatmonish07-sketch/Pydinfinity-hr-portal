@@ -67,22 +67,21 @@ export default function AttendancePage() {
       <PageHeader eyebrow="Module 8 · Attendance & Leave" title="Attendance & Leave" subtitle="Check-in from web or mobile, leave balances, approvals and holiday calendars." actions={<Button icon={CalendarPlus} onClick={() => setApplying(true)}>Apply leave</Button>} />
 
       <div className="mb-5 grid gap-4 lg:grid-cols-3">
-        <Card className="gradient-brand relative overflow-hidden p-5 text-primary-fg">
-          <div className="bg-grid absolute inset-0 opacity-25" aria-hidden />
+        <Card lift className="aura-hero p-5 sm:p-[22px]">
           <div className="relative">
             <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-85">{fmtDate(today, { weekday: "long", day: "numeric", month: "short" })}</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold tabular">{new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
+            <p className="mt-1 font-mono text-[clamp(36px,5vw,48px)] font-semibold tabular">{new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
             <p className="mt-1 text-sm opacity-90">{myRec?.checkIn ? `In at ${fmtTime(myRec.checkIn)}${myRec.checkOut ? ` · Out at ${fmtTime(myRec.checkOut)}` : ""}` : "You haven't checked in yet"}</p>
             {!myRec?.checkIn && (
               <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-black/15 p-1">
                 {(["Office", "Remote", "Field"] as const).map((m) => (
-                  <button key={m} onClick={() => setMode(m)} className={cn("h-9 rounded-full text-xs font-semibold", mode === m ? "bg-white text-[#1f2430]" : "text-white/90")}>{m}</button>
+                  <button key={m} onClick={() => setMode(m)} className={cn("h-9 rounded-full text-xs font-semibold", mode === m ? "bg-white text-primary-strong" : "text-white/90")}>{m}</button>
                 ))}
               </div>
             )}
             <div className="mt-3">
               {!myRec?.checkIn ? (
-                <button onClick={doCheckIn} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white font-semibold text-[#1f2430] shadow-lg transition-transform active:scale-[0.98]"><LogIn className="h-5 w-5" /> Check in {mode === "Field" && <MapPin className="h-4 w-4" />}</button>
+                <button onClick={doCheckIn} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white/95 font-bold text-primary-strong shadow-lg transition-transform active:scale-[0.98]"><LogIn className="h-5 w-5" /> Check in {mode === "Field" && <MapPin className="h-4 w-4" />}</button>
               ) : !myRec.checkOut ? (
                 <button onClick={() => checkOut(me.id)} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white/20 font-semibold text-white ring-1 ring-white/40 transition-transform active:scale-[0.98]"><LogOut className="h-5 w-5" /> Check out</button>
               ) : (

@@ -23,7 +23,7 @@ export default function RecruitmentPage() {
   return (
     <div>
       <PageHeader eyebrow="Module 15 · Recruitment (ATS)" title="Recruitment" subtitle="Job posts → candidate pipeline → interviews → one-click hire." actions={<Button icon={Plus} onClick={() => setAdding(true)}>Add candidate</Button>} />
-      <div className="no-scrollbar -mx-4 mb-5 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 xl:grid-cols-4">
+      <div className="no-scrollbar -mx-3 mb-5 flex gap-3 overflow-x-auto px-3 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 xl:grid-cols-4">
         {jobs.map((j) => (
           <button key={j.id} onClick={() => setJob(job === j.id ? "all" : j.id)} className={cn("card w-64 shrink-0 p-4 text-left transition-shadow hover:shadow-lg sm:w-auto", job === j.id && "border-primary ring-2 ring-primary/20")}>
             <div className="flex items-start justify-between gap-2"><p className="font-semibold">{j.title}</p><Badge tone="success">{j.openings} open</Badge></div>
@@ -35,7 +35,7 @@ export default function RecruitmentPage() {
       </div>
 
       {/* Mobile: stage tabs; desktop: kanban */}
-      <MobilePipeline list={list} move={move} hire={(id) => { const pid = hire(id); if (pid) router.push(`/people/${pid}`); }} />
+      <MobilePipeline list={list} move={move} hire={(id) => { const pid = hire(id); if (pid) router.push(`/people/view?id=${pid}`); }} />
       <div className="hidden gap-3 md:grid md:grid-cols-5">
         {STAGES.map((s) => {
           const items = list.filter((c) => c.stage === s);
@@ -43,7 +43,7 @@ export default function RecruitmentPage() {
             <div key={s} className="rounded-[var(--radius)] bg-surface-2 p-2">
               <div className="flex items-center justify-between px-2 py-2"><p className="text-sm font-semibold">{s}</p><span className="rounded-full bg-surface px-2 text-xs font-semibold tabular">{items.length}</span></div>
               <div className="space-y-2">
-                {items.map((c) => <CandidateCard key={c.id} id={c.id} move={move} hire={(id) => { const pid = hire(id); if (pid) router.push(`/people/${pid}`); }} />)}
+                {items.map((c) => <CandidateCard key={c.id} id={c.id} move={move} hire={(id) => { const pid = hire(id); if (pid) router.push(`/people/view?id=${pid}`); }} />)}
               </div>
             </div>
           );

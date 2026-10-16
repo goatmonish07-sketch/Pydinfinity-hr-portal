@@ -50,7 +50,7 @@ export default function FreelancersPage() {
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <Avatar person={p} size={40} />
                     <div className="min-w-0">
-                      <Link href={`/people/${p.id}`} className="block truncate text-sm font-semibold hover:text-primary">{fullName(p)}</Link>
+                      <Link href={`/people/view?id=${p.id}`} className="block truncate text-sm font-semibold hover:text-primary">{fullName(p)}</Link>
                       <p className="truncate text-xs text-muted">{p.designation} · {p.freelancer!.skills.join(", ")}</p>
                     </div>
                   </div>

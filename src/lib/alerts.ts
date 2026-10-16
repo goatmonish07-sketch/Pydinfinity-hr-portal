@@ -24,7 +24,7 @@ export function useAlerts() {
     const byId = new Map(people.map((p) => [p.id, p]));
     const out: Alert[] = [];
     for (const p of people) {
-      if (p.status === "Pending Approval") out.push({ id: `ap-${p.id}`, title: `Approve ${fullName(p)}`, detail: `${p.designation} · ID will be issued on approval`, href: `/people/${p.id}`, tone: "warning", kind: "approval" });
+      if (p.status === "Pending Approval") out.push({ id: `ap-${p.id}`, title: `Approve ${fullName(p)}`, detail: `${p.designation} · ID will be issued on approval`, href: `/people/view?id=${p.id}`, tone: "warning", kind: "approval" });
       if (p.status === "Exited") continue;
       if (p.intern) {
         const left = daysBetween(today, p.intern.endDate);

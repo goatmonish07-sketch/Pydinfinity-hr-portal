@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { useHR } from "@/lib/store";
 import { fullName, kycPercent } from "@/lib/utils";
@@ -8,8 +8,8 @@ import { Avatar, Card, Empty, Progress } from "@/components/ui";
 import { DocumentRow } from "@/components/doc-row";
 
 /** Self-service KYC link: the person uploads their own documents, HR only verifies. */
-export default function KycLinkPage() {
-  const { id } = useParams<{ id: string }>();
+export function KycLinkPage() {
+  const id = useSearchParams().get("id") ?? "";
   const person = useHR((s) => s.people.find((p) => p.id === id));
   const docs = useHR((s) => s.documents).filter((d) => d.personId === id);
   const company = useHR((s) => s.settings.companyName);
@@ -18,7 +18,7 @@ export default function KycLinkPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <Card className="overflow-hidden">
-        <div className="gradient-brand flex items-center gap-4 p-5 text-primary-fg">
+        <div className="aura-hero flex items-center gap-4 rounded-none p-5">
           <Avatar person={person} size={56} />
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-85">{company} · KYC</p>

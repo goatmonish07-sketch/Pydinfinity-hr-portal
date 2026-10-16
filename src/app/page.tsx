@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Users,
@@ -11,137 +12,159 @@ import {
   IdCard,
   CalendarPlus,
   FileSignature,
-  FileSpreadsheet,
   Megaphone,
-  Network,
-  Clock,
   CalendarClock,
   FileWarning,
-  ArrowRight,
+  ChevronRight,
   Cake,
   LogIn,
   LogOut,
-  TrendingUp,
   Wallet,
-  Sparkles,
+  Activity,
+  Palmtree,
 } from "lucide-react";
 import { can, useHR, useMe } from "@/lib/store";
-import { useAlerts } from "@/lib/alerts";
 import { leaveBalance, LEAVE_NAMES } from "@/lib/hr";
-import { daysBetween, fmtDate, fmtINR, fmtTime, fullName, kycPercent, todayISO, cn } from "@/lib/utils";
-import { Avatar, Badge, Button, Card, CardHeader, Progress, StatCard, StatusBadge } from "@/components/ui";
-import { Columns, Donut, HBar } from "@/components/charts";
+import { addDays, cn, daysBetween, fmtDate, fmtINR, fmtTime, fullName, kycPercent, todayISO } from "@/lib/utils";
+import type { Person } from "@/lib/types";
+import { Avatar, Badge, Button, Card, CardHeader, Seg, StatCard, StatusBadge } from "@/components/ui";
+import { Columns, Donut, Gauge, HBar, TrendBars } from "@/components/charts";
 
-function greeting() {
+const hello = () => {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+};
+
+/* ------------------------------ Live clock ----------------------------- */
+function useClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
 }
 
-/* ----------------------------- Hero banner ---------------------------- */
-function Hero({ slides }: { slides: { tag: string; title: string; sub: string; cta: string; href: string }[] }) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setI((v) => (v + 1) % slides.length), 5500);
-    return () => clearInterval(t);
-  }, [slides.length]);
-  const s = slides[i];
+function ClockCard({ person, present, expected, delay = 0 }: { person: Person; present?: number; expected?: number; delay?: number }) {
+  const now = useClock();
+  const attendance = useHR((s) => s.attendance);
+  const checkIn = useHR((s) => s.checkIn);
+  const checkOut = useHR((s) => s.checkOut);
+  const rec = attendance.find((a) => a.personId === person.id && a.date === todayISO());
   return (
-    <section className="gradient-brand relative overflow-hidden rounded-[calc(var(--radius)*1.2)] text-primary-fg shadow-lg shadow-primary/25">
-      <div className="bg-grid absolute inset-0 opacity-30" aria-hidden />
-      <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/15 blur-2xl" aria-hidden />
-      <div className="absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-black/10 blur-2xl" aria-hidden />
-      <div className="relative flex min-h-[168px] flex-col justify-center px-5 py-6 sm:min-h-[200px] sm:px-8">
-        <div key={i} className="animate-fade-up max-w-xl">
-          <span className="text-[10px] font-bold uppercase tracking-[0.25em] opacity-85 sm:text-xs">{s.tag}</span>
-          <h2 className="mt-1.5 text-xl font-bold leading-tight sm:text-3xl">{s.title}</h2>
-          <p className="mt-1 text-sm opacity-90">{s.sub}</p>
-          <Link href={s.href} className="mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-[#1f2430] shadow-md transition-transform hover:scale-[1.02]">
-            {s.cta}
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </div>
-        <div className="absolute bottom-4 right-5 flex gap-2 sm:right-8">
-          {slides.map((_, k) => (
-            <button key={k} aria-label={`Slide ${k + 1}`} onClick={() => setI(k)} className={cn("h-1.5 rounded-full transition-all", k === i ? "w-6 bg-white" : "w-2 bg-white/50")} />
-          ))}
-        </div>
+    <section className="rise lift relative flex flex-col justify-between gap-4 overflow-hidden rounded-[var(--radius-card)] p-5 text-white shadow-[var(--shadow)] sm:p-[22px]" style={{ animationDelay: `${delay}ms`, background: "radial-gradient(circle at 105% 115%, color-mix(in srgb, var(--primary) 70%, transparent), transparent 55%), repeating-radial-gradient(circle at 100% 100%, rgba(255,255,255,0.06) 0 1px, transparent 1px 18px), linear-gradient(135deg, var(--primary-strong), color-mix(in srgb, var(--primary-strong) 80%, #000))" }}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          <span className="live-dot" aria-hidden /> Attendance · live
+        </span>
+        <span className="text-xs opacity-80">{fmtDate(todayISO(), { weekday: "long", day: "numeric", month: "short" })}</span>
+      </div>
+      <p className="font-mono text-[clamp(40px,6vw,60px)] font-semibold leading-none tracking-[-0.02em] tabular">{now.toLocaleTimeString("en-IN", { hour12: false })}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm opacity-85">
+          {rec?.checkIn ? `In ${fmtTime(rec.checkIn)}${rec.checkOut ? ` · out ${fmtTime(rec.checkOut)}` : ""}` : "You haven't checked in yet"}
+          {present !== undefined && (
+            <>
+              <br />
+              <span className="tabular">{present}</span> of <span className="tabular">{expected}</span> people in today
+            </>
+          )}
+        </p>
+        {!rec?.checkIn ? (
+          <button onClick={() => checkIn(person.id, person.branch === "Remote" ? "Remote" : "Office")} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/95 px-5 text-sm font-bold text-primary-strong transition-transform active:scale-[0.97]">
+            <LogIn className="h-4 w-4" /> Check in
+          </button>
+        ) : !rec.checkOut ? (
+          <button onClick={() => checkOut(person.id)} className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-white/60 px-5 text-sm font-bold transition-transform active:scale-[0.97]">
+            <LogOut className="h-4 w-4" /> Check out
+          </button>
+        ) : (
+          <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold">Day complete</span>
+        )}
       </div>
     </section>
   );
 }
 
-/* ---------------------------- Quick circles --------------------------- */
-function QuickActions({ items }: { items: { href: string; label: string; icon: typeof Users }[] }) {
-  return (
-    <section aria-label="Quick actions" className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 py-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 md:grid-cols-8">
-      {items.map(({ href, label, icon: Icon }) => (
-        <Link key={label} href={href} className="group flex w-[72px] shrink-0 flex-col items-center gap-2 text-center sm:w-auto">
-          <span className="grid h-16 w-16 place-items-center rounded-full border-2 border-primary/20 bg-surface text-primary shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:border-primary group-hover:shadow-md group-hover:shadow-primary/20">
-            <Icon className="h-6 w-6" aria-hidden />
-          </span>
-          <span className="line-clamp-2 text-[11.5px] font-medium leading-tight text-fg-2 group-hover:text-fg">{label}</span>
-        </Link>
-      ))}
-    </section>
-  );
+export default function Dashboard() {
+  const { role } = useMe();
+  if (role === "Self-service") return <SelfDashboard />;
+  return <AdminDashboard key={role} />;
 }
 
-export default function Dashboard() {
-  const { role, me } = useMe();
-  if (role === "Self-service") return <SelfDashboard />;
-  return <AdminDashboard key={role} manager={role === "Manager"} meId={me.id} />;
-}
+type Range = "week" | "month" | "quarter";
+const RANGE_DAYS: Record<Range, number> = { week: 7, month: 30, quarter: 90 };
 
 /* ---------------------------- Admin / HR ------------------------------ */
-function AdminDashboard({ manager, meId }: { manager: boolean; meId: string }) {
+function AdminDashboard() {
+  const router = useRouter();
   const { role, me } = useMe();
+  const manager = role === "Manager";
   const allPeople = useHR((s) => s.people);
   const documents = useHR((s) => s.documents);
   const invoices = useHR((s) => s.invoices);
   const attendance = useHR((s) => s.attendance);
   const leaves = useHR((s) => s.leaves);
   const announcements = useHR((s) => s.announcements);
-  const alerts = useAlerts();
+  const branch = useHR((s) => s.branch);
+  const company = useHR((s) => s.settings.companyName);
+  const [range, setRange] = useState<Range>("week");
   const today = todayISO();
 
-  const people = useMemo(() => (manager ? allPeople.filter((p) => p.managerId === meId) : allPeople), [allPeople, manager, meId]);
+  const people = useMemo(() => allPeople.filter((p) => (!manager || p.managerId === me.id) && (branch === "All branches" || p.branch === branch)), [allPeople, manager, me.id, branch]);
+  const ids = useMemo(() => new Set(people.map((p) => p.id)), [people]);
   const active = people.filter((p) => p.status !== "Exited" && p.status !== "Pending Approval");
   const byType = (t: string) => active.filter((p) => p.type === t).length;
-  const ids = new Set(people.map((p) => p.id));
+  const since90 = addDays(today, -90);
+  const joinedRecently = (t?: string) => people.filter((p) => p.joiningDate >= since90 && p.joiningDate <= today && (!t || p.type === t)).length;
   const docs = documents.filter((d) => ids.has(d.personId));
   const pendingKyc = docs.filter((d) => d.status === "Uploaded").length;
   const kycAvg = Math.round(active.reduce((a, p) => a + kycPercent(docs.filter((d) => d.personId === p.id)), 0) / Math.max(active.length, 1));
   const presentToday = attendance.filter((a) => a.date === today && ids.has(a.personId)).length;
+  const expected = active.filter((p) => p.type !== "freelancer").length;
+
+  // headcount at the end of each of the last 12 months
+  const months = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 12 }, (_, k) => {
+      const end = new Date(now.getFullYear(), now.getMonth() - (11 - k) + 1, 0);
+      const endISO = end.toISOString().slice(0, 10);
+      const count = people.filter((p) => p.status !== "Pending Approval" && p.joiningDate <= endISO && !p.timeline.some((t) => t.kind === "exit" && t.date.slice(0, 10) <= endISO)).length;
+      const join = people.filter((p) => p.joiningDate.slice(0, 7) === endISO.slice(0, 7)).length;
+      const exit = people.filter((p) => p.timeline.some((t) => t.kind === "exit" && t.date.slice(0, 7) === endISO.slice(0, 7))).length;
+      return { label: end.toLocaleDateString("en-IN", { month: "short" }), title: end.toLocaleDateString("en-IN", { month: "long", year: "numeric" }), value: count, join, exit };
+    });
+  }, [people]);
 
   const depts = useMemo(() => {
     const m = new Map<string, number>();
     active.forEach((p) => m.set(p.department, (m.get(p.department) ?? 0) + 1));
-    return [...m.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    return [...m.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 6);
   }, [active]);
 
-  const months = useMemo(() => {
-    const out: { label: string; join: number; exit: number }[] = [];
-    const now = new Date();
-    for (let k = 5; k >= 0; k--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - k, 1);
-      const label = d.toLocaleDateString("en-IN", { month: "short" });
-      const same = (iso: string) => {
-        const x = new Date(iso);
-        return x.getFullYear() === d.getFullYear() && x.getMonth() === d.getMonth();
-      };
-      out.push({
-        label,
-        join: people.filter((p) => same(p.joiningDate)).length,
-        exit: people.filter((p) => p.timeline.some((t) => t.kind === "exit" && same(t.date))).length,
-      });
+  // things due in the selected range
+  const due = useMemo(() => {
+    const end = addDays(today, RANGE_DAYS[range]);
+    const out: { id: string; icon: typeof Users; title: string; sub: string; date: string; href: string; tone: "warning" | "danger" | "info" | "primary" }[] = [];
+    for (const p of people) {
+      if (p.status === "Exited") continue;
+      if (p.status === "Pending Approval") out.push({ id: `ap${p.id}`, icon: IdCard, title: `${fullName(p)} joins`, sub: `${p.designation} · approve to issue ID`, date: p.joiningDate, href: `/people/view?id=${p.id}`, tone: "primary" });
+      if (p.intern && p.intern.endDate >= today && p.intern.endDate <= end) out.push({ id: `in${p.id}`, icon: GraduationCap, title: `Internship ends · ${fullName(p)}`, sub: "Certificate or convert", date: p.intern.endDate, href: "/interns", tone: "info" });
+      if (p.freelancer && p.freelancer.contractEnd >= today && p.freelancer.contractEnd <= end) out.push({ id: `fr${p.id}`, icon: Briefcase, title: `Contract renewal · ${fullName(p)}`, sub: "Freelance contract ends", date: p.freelancer.contractEnd, href: "/freelancers", tone: "warning" });
     }
-    return out;
-  }, [people]);
+    for (const d of docs) if (d.expiry && d.status === "Verified" && d.expiry <= end) {
+      const p = people.find((x) => x.id === d.personId)!;
+      out.push({ id: `ex${d.id}`, icon: FileWarning, title: `${d.kind} ${d.expiry < today ? "expired" : "expires"}`, sub: fullName(p), date: d.expiry, href: "/documents?status=Expiring", tone: d.expiry < today ? "danger" : "warning" });
+    }
+    return out.sort((a, b) => a.date.localeCompare(b.date));
+  }, [people, docs, range, today]);
 
-  const freelancerSpend = invoices.filter((i) => i.status === "Paid" && daysBetween(i.date, today) <= 90).reduce((a, i) => a + i.amount, 0);
-  const interns = allPeople.filter((p) => p.previousCodes.length || p.type === "intern");
-  const converted = allPeople.filter((p) => p.previousCodes.some((c) => c.includes("-INT-"))).length;
   const pendingLeaves = leaves.filter((l) => l.status === "Pending" && ids.has(l.personId));
+  const outToday = leaves.filter((l) => l.status === "Approved" && l.from <= today && l.to >= today && ids.has(l.personId));
+  const d30 = addDays(today, -60);
+  const d60 = addDays(today, -120);
+  const freelancerSpend = invoices.filter((i) => i.status === "Paid" && i.date > d30).reduce((a, i) => a + i.amount, 0);
+  const prevSpend = invoices.filter((i) => i.status === "Paid" && i.date > d60 && i.date <= d30).reduce((a, i) => a + i.amount, 0);
   const birthdays = active
     .map((p) => {
       const d = new Date(p.dob);
@@ -152,246 +175,264 @@ function AdminDashboard({ manager, meId }: { manager: boolean; meId: string }) {
     .sort((a, b) => a.days - b.days)
     .slice(0, 4);
 
-  const slides = [
-    { tag: `${greeting()}, ${me.firstName}`, title: manager ? `Your team of ${active.length} at a glance` : `${active.length} people across ${depts.length} departments`, sub: `${presentToday} checked in today · ${alerts.length} items need attention`, cta: "Open people directory", href: "/people" },
-    { tag: "KYC VAULT", title: `${pendingKyc} documents waiting for you`, sub: `Average KYC completion is ${kycAvg}%. Verify uploads in one place.`, cta: "Verify documents", href: "/documents?status=Uploaded" },
-    { tag: "ID GENERATOR", title: "Print QR ID cards in bulk", sub: "Auto IDs, locked once issued — never edited, never reused.", cta: "Open ID cards", href: "/ids" },
-  ];
-
-  const actions = [
-    { href: "/people?new=1", label: "Add person", icon: UserPlus },
-    { href: "/ids", label: "ID cards", icon: IdCard },
-    { href: "/documents?status=Uploaded", label: "Verify KYC", icon: ShieldCheck },
-    { href: "/attendance?apply=1", label: "Apply leave", icon: CalendarPlus },
-    { href: "/letters", label: "Letters", icon: FileSignature },
-    { href: "/import-export", label: "Import", icon: FileSpreadsheet },
-    { href: "/announcements?new=1", label: "Announce", icon: Megaphone },
-    { href: "/org-chart", label: "Org chart", icon: Network },
-  ].filter((a) => can(role, "people.manage") || ["/attendance?apply=1", "/letters", "/org-chart", "/documents?status=Uploaded"].includes(a.href));
-
-  const actionAlerts = alerts.filter((a) => a.kind !== "celebration").slice(0, 6);
-
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <Hero slides={slides} />
-      <QuickActions items={actions} />
+    <div className="flex flex-col gap-4">
+      {/* Welcome + KPIs */}
+      <Card className="p-4 sm:p-[22px]">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[13px] text-muted">
+              {fmtDate(today, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {company}, {branch}
+            </p>
+            <h1 className="mt-1.5 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-[-0.03em]">
+              {hello()}, {me.firstName}
+            </h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {can(role, "people.manage") && (
+              <Button size="lg" icon={UserPlus} onClick={() => router.push("/people?new=1")}>
+                Add person
+              </Button>
+            )}
+            <Button size="lg" variant="outline" icon={CalendarPlus} onClick={() => router.push(manager ? "/attendance" : "/attendance?apply=1")}>
+              {manager ? "Team leave" : "Apply leave"}
+            </Button>
+          </div>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+          <StatCard hero label={manager ? "My team" : "Active people"} value={active.length} icon={Activity} hint={`${presentToday} checked in right now`} onClick={() => router.push("/people")} delay={80} />
+          <StatCard label="Employees" value={byType("employee")} icon={Users} hint={<Delta n={joinedRecently("employee")} label="joined · 90 days" />} onClick={() => router.push("/people?type=employee")} delay={150} />
+          <StatCard label="Interns" value={byType("intern")} icon={GraduationCap} tone="info" hint={<Delta n={joinedRecently("intern")} label="joined · 90 days" />} onClick={() => router.push("/interns")} delay={220} />
+          {manager ? (
+            <StatCard label="Leave requests" value={pendingLeaves.length} icon={CalendarClock} tone="warning" hint="waiting for you" onClick={() => router.push("/attendance")} delay={290} />
+          ) : (
+            <StatCard label="Freelancer spend · 60d" value={fmtINR(freelancerSpend, true)} icon={Wallet} tone="warning" hint={<Delta n={freelancerSpend - prevSpend} label="vs prior 60 days" money />} onClick={() => router.push("/freelancers")} delay={290} />
+          )}
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard label="Employees" value={byType("employee")} icon={Users} hint={`${active.filter((p) => p.status === "Notice Period").length} on notice period`} />
-        <StatCard label="Interns" value={byType("intern")} icon={GraduationCap} tone="info" hint={`${converted} converted to employee`} />
-        <StatCard label="Freelancers" value={byType("freelancer")} icon={Briefcase} tone="warning" hint={`${fmtINR(freelancerSpend, true)} paid · 90 days`} />
-        <StatCard label="KYC complete" value={`${kycAvg}%`} icon={ShieldCheck} tone="success" hint={`${pendingKyc} awaiting verification`} />
+      {/* Trend + gauge */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Card lift delay={200}>
+          <CardHeader title="Headcount · last 12 months" subtitle={`${months[11]?.value ?? 0} people today · ${months.reduce((a, m) => a + m.join, 0)} joined this year`} />
+          <div className="px-4 pb-4 sm:px-[22px] sm:pb-5">
+            <TrendBars data={months} label="Headcount at the end of each month, latest highlighted" />
+            <p className="mt-1.5 text-xs text-muted">Bars: headcount at month end · Line: trend · This month in full colour</p>
+          </div>
+        </Card>
+        <Card lift delay={260} className="flex flex-col">
+          <CardHeader title="KYC completion" subtitle="Average across active people" action={<Badge tone="primary">{pendingKyc} to verify</Badge>} />
+          <div className="flex flex-1 flex-col justify-center px-4 pb-5 sm:px-[22px]">
+            <Gauge pct={kycAvg} label="KYC completion" caption={`${docs.filter((d) => d.status === "Verified").length} of ${docs.length} documents verified`} />
+            <Button variant="ghost" size="sm" className="mx-auto mt-3" onClick={() => router.push("/documents?status=Uploaded")}>
+              Open verification queue <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </Card>
       </div>
 
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader title="Needs your attention" subtitle="Approvals, verification, expiries & renewals" icon={Sparkles} action={<Badge tone="primary">{alerts.length}</Badge>} />
-          <ul className="divide-y divide-line">
-            {actionAlerts.length === 0 && <li className="p-6 text-center text-sm text-muted">Nothing pending. Nice work!</li>}
-            {actionAlerts.map((a) => {
-              const Icon = a.kind === "expiry" ? FileWarning : a.kind === "intern" ? GraduationCap : a.kind === "contract" ? Briefcase : a.kind === "approval" ? IdCard : a.kind === "leave" ? CalendarClock : ShieldCheck;
-              return (
-                <li key={a.id}>
-                  <Link href={a.href} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2 sm:px-5">
-                    <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full", a.tone === "danger" ? "bg-danger-soft text-danger" : a.tone === "warning" ? "bg-warning-soft text-warning" : "bg-info-soft text-info")}>
-                      <Icon className="h-[18px] w-[18px]" aria-hidden />
+      {/* Due / leave / departments */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card lift delay={320}>
+          <CardHeader
+            title={
+              <>
+                Coming up <span className="ml-1 inline-flex h-6 min-w-[26px] items-center justify-center rounded-full bg-primary-soft px-2 align-middle text-[13px] font-bold text-primary tabular">{due.length}</span>
+              </>
+            }
+            action={<Link href="/onboarding" className="inline-flex min-h-9 items-center rounded-full px-3 text-[13px] font-semibold text-muted hover:bg-surface-2 hover:text-fg">All</Link>}
+          />
+          <div className="px-4 sm:px-[22px]">
+            <Seg label="Due within" value={range} onChange={setRange} options={[{ value: "week", label: "This week" }, { value: "month", label: "Month" }, { value: "quarter", label: "Quarter" }]} />
+          </div>
+          <ul className="px-2 pb-3 pt-2 sm:px-3.5">
+            {due.length === 0 && <li className="px-3 py-9 text-center text-sm text-muted">Nothing due. All caught up.</li>}
+            {due.slice(0, 6).map((d) => (
+              <li key={d.id} className="border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] last:border-0">
+                <Link href={d.href} className="flex items-center gap-3 rounded-[14px] px-2 py-2.5 transition-colors hover:bg-surface-2">
+                  <d.icon className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{d.title}</span>
+                    <span className={cn("block text-xs font-bold", d.date < today ? "text-danger" : "text-muted")}>
+                      {d.date < today ? "Overdue · " : ""}
+                      {fmtDate(d.date, { weekday: "short", day: "numeric", month: "short" })} · <span className="font-medium">{d.sub}</span>
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{a.title}</span>
-                      <span className="block truncate text-xs text-muted">{a.detail}</span>
-                    </span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
-                  </Link>
-                </li>
-              );
-            })}
+                  </span>
+                </Link>
+              </li>
+            ))}
           </ul>
         </Card>
 
-        <Card>
-          <CardHeader title="Headcount by type" subtitle="Active people" icon={Users} />
-          <div className="p-5">
-            <Donut
-              center={String(active.length)}
-              sub="active"
-              data={[
-                { label: "Employees", value: byType("employee") },
-                { label: "Interns", value: byType("intern") },
-                { label: "Freelancers", value: byType("freelancer") },
-              ]}
-            />
-          </div>
+        <Card lift delay={380}>
+          <CardHeader title="Leave & absence" subtitle={`${outToday.length} out today · ${pendingLeaves.length} to approve`} action={<Link href="/attendance" className="inline-flex min-h-9 items-center rounded-full px-3 text-[13px] font-semibold text-muted hover:bg-surface-2 hover:text-fg">Open</Link>} />
+          <ul className="px-2 pb-3 sm:px-3.5">
+            {[...outToday.map((l) => ({ l, out: true })), ...pendingLeaves.map((l) => ({ l, out: false }))].slice(0, 6).map(({ l, out }) => {
+              const p = allPeople.find((x) => x.id === l.personId)!;
+              return (
+                <li key={l.id + String(out)} className="flex items-center gap-3 border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-2 py-2.5 last:border-0">
+                  <Avatar person={p} size={34} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{fullName(p)}</span>
+                    <span className="block text-xs text-muted">
+                      {LEAVE_NAMES[l.type]} · {l.days}d · {fmtDate(l.from, { day: "numeric", month: "short" })}
+                    </span>
+                  </span>
+                  {out ? <Badge tone="info"><Palmtree className="h-3 w-3" /> Out</Badge> : <Badge tone="warning">Pending</Badge>}
+                </li>
+              );
+            })}
+            {outToday.length + pendingLeaves.length === 0 && <li className="px-3 py-9 text-center text-sm text-muted">Everyone&apos;s in. No pending requests.</li>}
+          </ul>
         </Card>
-      </div>
 
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Joiners vs exits" subtitle="Last 6 months" icon={TrendingUp} />
-          <div className="p-5">
-            <Columns labels={months.map((m) => m.label)} series={[{ name: "Joiners", values: months.map((m) => m.join) }, { name: "Exits", values: months.map((m) => m.exit) }]} />
-          </div>
-        </Card>
-        <Card>
-          <CardHeader title="By department" subtitle={`${depts.length} departments`} icon={Network} />
-          <div className="p-5">
+        <Card lift delay={440}>
+          <CardHeader title="By department" subtitle={`${active.length} active people`} />
+          <div className="px-4 pb-5 sm:px-[22px]">
             <HBar data={depts} />
           </div>
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-3">
-        <Card>
-          <CardHeader title="Leave requests" subtitle={`${pendingLeaves.length} pending`} icon={CalendarClock} action={<Link href="/attendance" className="text-xs font-semibold text-primary hover:underline">View all</Link>} />
-          <ul className="divide-y divide-line">
-            {pendingLeaves.slice(0, 4).map((l) => {
-              const p = allPeople.find((x) => x.id === l.personId)!;
-              return (
-                <li key={l.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-                  <Avatar person={p} size={34} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{fullName(p)}</p>
-                    <p className="text-xs text-muted">{LEAVE_NAMES[l.type]} · {l.days}d · {fmtDate(l.from, { day: "2-digit", month: "short" })}</p>
-                  </div>
-                  <Badge tone="warning">Pending</Badge>
-                </li>
-              );
-            })}
-            {pendingLeaves.length === 0 && <li className="p-6 text-center text-sm text-muted">No pending requests</li>}
-          </ul>
+      {/* Clock / mix / joiners */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ClockCard person={me} present={presentToday} expected={expected} delay={480} />
+        <Card lift delay={520}>
+          <CardHeader title="Workforce mix" subtitle="Employees · interns · freelancers" />
+          <div className="px-4 pb-5 sm:px-[22px]">
+            <Donut center={active.length} sub="active" data={[{ label: "Employees", value: byType("employee") }, { label: "Interns", value: byType("intern") }, { label: "Freelancers", value: byType("freelancer") }]} />
+          </div>
         </Card>
-        <Card>
-          <CardHeader title="Upcoming birthdays" subtitle="Celebrate your people" icon={Cake} />
-          <ul className="divide-y divide-line">
+        <Card lift delay={560}>
+          <CardHeader title="Joiners vs exits" subtitle="Last 6 months" />
+          <div className="px-4 pb-5 sm:px-[22px]">
+            <Columns labels={months.slice(6).map((m) => m.label)} series={[{ name: "Joiners", values: months.slice(6).map((m) => m.join) }, { name: "Exits", values: months.slice(6).map((m) => m.exit) }]} />
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card lift delay={600}>
+          <CardHeader title="Celebrations" subtitle="Upcoming birthdays" icon={Cake} />
+          <ul className="px-2 pb-3 sm:px-3.5">
             {birthdays.map(({ p, days }) => (
-              <li key={p.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+              <li key={p.id} className="flex items-center gap-3 border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-2 py-2.5 last:border-0">
                 <Avatar person={p} size={34} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{fullName(p)}</p>
-                  <p className="text-xs text-muted">{fmtDate(p.dob, { day: "2-digit", month: "long" })}</p>
-                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{fullName(p)}</span>
+                  <span className="block text-xs text-muted">{fmtDate(p.dob, { day: "numeric", month: "long" })}</span>
+                </span>
                 <Badge tone={days === 0 ? "primary" : "neutral"}>{days === 0 ? "Today" : `in ${days}d`}</Badge>
               </li>
             ))}
           </ul>
         </Card>
-        <Card>
-          <CardHeader title="Notice board" subtitle="Latest announcements" icon={Megaphone} action={<Link href="/announcements" className="text-xs font-semibold text-primary hover:underline">Open</Link>} />
-          <ul className="divide-y divide-line">
+        <Card lift delay={640}>
+          <CardHeader title="Notice board" subtitle="Latest announcements" icon={Megaphone} action={<Link href="/announcements" className="inline-flex min-h-9 items-center rounded-full px-3 text-[13px] font-semibold text-muted hover:bg-surface-2 hover:text-fg">Open</Link>} />
+          <ul className="px-2 pb-3 sm:px-3.5">
             {announcements.slice(0, 3).map((a) => (
-              <li key={a.id} className="px-4 py-3 sm:px-5">
+              <li key={a.id} className="border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-2 py-3 last:border-0">
                 <div className="flex items-center gap-2">
                   <Badge tone={a.category === "Policy" ? "info" : a.category === "Event" ? "primary" : "neutral"}>{a.category}</Badge>
-                  <span className="text-xs text-muted">{fmtDate(a.date, { day: "2-digit", month: "short" })}</span>
+                  <span className="text-xs text-muted">{fmtDate(a.date, { day: "numeric", month: "short" })}</span>
                 </div>
-                <p className="mt-1.5 line-clamp-1 text-sm font-medium">{a.title}</p>
+                <p className="mt-1.5 line-clamp-1 text-sm font-semibold">{a.title}</p>
               </li>
             ))}
           </ul>
         </Card>
       </div>
-
-      {!manager && (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <StatCard label="Present today" value={presentToday} icon={Clock} tone="success" hint={`of ${active.filter((p) => p.type !== "freelancer").length} expected`} />
-          <StatCard label="Intern → Employee" value={`${Math.round((converted / Math.max(interns.length, 1)) * 100)}%`} icon={GraduationCap} tone="info" hint="conversion rate" />
-          <StatCard label="Pending invoices" value={invoices.filter((i) => i.status !== "Paid").length} icon={Wallet} tone="warning" hint={fmtINR(invoices.filter((i) => i.status !== "Paid").reduce((a, i) => a + i.amount, 0), true)} />
-          <StatCard label="Awaiting approval" value={allPeople.filter((p) => p.status === "Pending Approval").length} icon={IdCard} hint="new joiners without IDs" />
-        </div>
-      )}
     </div>
+  );
+}
+
+function Delta({ n, label, money }: { n: number; label: string; money?: boolean }) {
+  const up = n >= 0;
+  return (
+    <>
+      <b className={cn("inline-flex items-center gap-0.5 rounded-[7px] border border-current px-[7px] py-px font-bold", up ? "text-success" : "text-danger")}>
+        {up ? "▲" : "▼"} {money ? fmtINR(Math.abs(n), true) : Math.abs(n)}
+      </b>
+      <span>{label}</span>
+    </>
   );
 }
 
 /* ---------------------------- Self-service ---------------------------- */
 function SelfDashboard() {
+  const router = useRouter();
   const { me } = useMe();
   const documents = useHR((s) => s.documents);
   const leaves = useHR((s) => s.leaves);
   const quota = useHR((s) => s.settings.leaveQuota);
-  const attendance = useHR((s) => s.attendance);
   const announcements = useHR((s) => s.announcements);
-  const checkIn = useHR((s) => s.checkIn);
-  const checkOut = useHR((s) => s.checkOut);
-  const today = todayISO();
+  const company = useHR((s) => s.settings.companyName);
   const mine = documents.filter((d) => d.personId === me.id);
   const kyc = kycPercent(mine);
-  const rec = attendance.find((a) => a.personId === me.id && a.date === today);
   const bal = leaveBalance(me.id, leaves, quota).filter((b) => b.type !== "LOP");
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <Hero
-        slides={[
-          { tag: `${greeting()}, ${me.firstName}`, title: rec?.checkIn ? `Checked in at ${fmtTime(rec.checkIn)}` : "Ready to start your day?", sub: `${me.code} · ${me.designation}`, cta: "View my profile", href: `/people/${me.id}` },
-          { tag: "MY KYC", title: `Your KYC is ${kyc}% complete`, sub: "Upload pending documents — HR will verify them.", cta: "Upload documents", href: "/documents" },
-        ]}
-      />
-      <QuickActions
-        items={[
-          { href: "/attendance?apply=1", label: "Apply leave", icon: CalendarPlus },
-          { href: "/documents", label: "My KYC", icon: ShieldCheck },
-          { href: "/letters", label: "My letters", icon: FileSignature },
-          { href: "/payroll", label: "Payslips", icon: Wallet },
-        ]}
-      />
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-3">
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Today</p>
-          <p className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tabular">{new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
-          <p className="text-sm text-fg-2">{fmtDate(today, { weekday: "long", day: "numeric", month: "long" })}</p>
-          <div className="mt-4 flex gap-2">
-            {!rec?.checkIn ? (
-              <Button icon={LogIn} className="flex-1" onClick={() => checkIn(me.id, me.branch === "Remote" ? "Remote" : "Office")}>Check in</Button>
-            ) : !rec.checkOut ? (
-              <Button icon={LogOut} variant="secondary" className="flex-1" onClick={() => checkOut(me.id)}>Check out</Button>
-            ) : (
-              <Badge tone="success">Day complete · {fmtTime(rec.checkIn)} – {fmtTime(rec.checkOut)}</Badge>
-            )}
+    <div className="flex flex-col gap-4">
+      <Card className="p-4 sm:p-[22px]">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[13px] text-muted">
+              {fmtDate(todayISO(), { weekday: "long", day: "numeric", month: "long" })} · {company}
+            </p>
+            <h1 className="mt-1.5 text-[clamp(28px,4vw,40px)] font-extrabold leading-tight tracking-[-0.03em]">
+              {hello()}, {me.firstName}
+            </h1>
+            <p className="mt-1 font-mono text-sm text-muted">{me.code} · {me.designation}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="lg" icon={CalendarPlus} onClick={() => router.push("/attendance?apply=1")}>Apply leave</Button>
+            <Button size="lg" variant="outline" icon={FileSignature} onClick={() => router.push("/letters")}>My letters</Button>
+          </div>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+          {bal.map((b, i) => (
+            <StatCard key={b.type} hero={i === 0} label={`${LEAVE_NAMES[b.type]} leave`} value={b.left} icon={Palmtree} tone="info" hint={`of ${b.quota} days left`} delay={80 + i * 70} />
+          ))}
+          <StatCard label="Payslip" value={me.ctc ? fmtINR(Math.round(me.ctc / 12), true) : "—"} icon={Wallet} tone="warning" hint="gross per month" onClick={() => router.push("/payroll")} delay={290} />
+        </div>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ClockCard person={me} delay={200} />
+        <Card lift delay={260} className="flex flex-col">
+          <CardHeader title="My KYC" subtitle={`${mine.filter((d) => d.status === "Verified").length} of ${mine.length} verified`} icon={ShieldCheck} />
+          <div className="flex flex-1 flex-col justify-center px-4 pb-5 sm:px-[22px]">
+            <Gauge pct={kyc} label="KYC" caption={kyc === 100 ? "All documents verified" : "Upload pending documents"} />
+            <Button variant="ghost" size="sm" className="mx-auto mt-3" onClick={() => router.push("/documents")}>
+              Upload documents <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">KYC progress</p>
-          <p className="mt-2 font-[family-name:var(--font-display)] text-3xl font-bold tabular">{kyc}%</p>
-          <Progress value={kyc} tone={kyc === 100 ? "success" : "primary"} className="mt-3" label="KYC progress" />
-          <p className="mt-2 text-xs text-muted">{mine.filter((d) => d.status === "Verified").length} of {mine.length} verified</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">Leave balance</p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {bal.map((b) => (
-              <div key={b.type} className="rounded-[calc(var(--radius)*0.7)] bg-surface-2 p-3 text-center">
-                <p className="font-[family-name:var(--font-display)] text-2xl font-bold tabular">{b.left}</p>
-                <p className="text-[11px] text-muted">{LEAVE_NAMES[b.type]}</p>
-              </div>
+        <Card lift delay={320}>
+          <CardHeader title="My leave" icon={CalendarClock} />
+          <ul className="px-2 pb-3 sm:px-3.5">
+            {leaves.filter((l) => l.personId === me.id).slice(0, 5).map((l) => (
+              <li key={l.id} className="flex items-center justify-between gap-2 border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-2 py-2.5 text-sm last:border-0">
+                <span>{LEAVE_NAMES[l.type]} · {fmtDate(l.from, { day: "numeric", month: "short" })} · {l.days}d</span>
+                <StatusBadge status={l.status} />
+              </li>
             ))}
-          </div>
+            {!leaves.some((l) => l.personId === me.id) && <li className="px-3 py-9 text-center text-sm text-muted">No leave taken this year.</li>}
+          </ul>
         </Card>
       </div>
-      <Card>
+      <Card lift delay={380}>
         <CardHeader title="Notice board" icon={Megaphone} />
-        <ul className="divide-y divide-line">
+        <ul className="px-2 pb-3 sm:px-3.5">
           {announcements.slice(0, 4).map((a) => (
-            <li key={a.id} className="px-5 py-4">
+            <li key={a.id} className="border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-2 py-3 last:border-0">
               <div className="flex items-center gap-2">
                 <Badge tone="primary">{a.category}</Badge>
                 <span className="text-xs text-muted">{fmtDate(a.date)}</span>
               </div>
-              <p className="mt-1.5 font-medium">{a.title}</p>
-              <p className="mt-0.5 text-sm text-fg-2">{a.body}</p>
+              <p className="mt-1.5 font-semibold">{a.title}</p>
+              <p className="mt-0.5 text-sm text-muted">{a.body}</p>
             </li>
           ))}
-        </ul>
-      </Card>
-      <Card>
-        <CardHeader title="My leave history" icon={CalendarClock} />
-        <ul className="divide-y divide-line">
-          {leaves.filter((l) => l.personId === me.id).slice(0, 5).map((l) => (
-            <li key={l.id} className="flex items-center justify-between px-5 py-3 text-sm">
-              <span>{LEAVE_NAMES[l.type]} · {fmtDate(l.from)} ({l.days}d)</span>
-              <StatusBadge status={l.status} />
-            </li>
-          ))}
-          {!leaves.some((l) => l.personId === me.id) && <li className="p-5 text-sm text-muted">No leave taken yet this year.</li>}
         </ul>
       </Card>
     </div>

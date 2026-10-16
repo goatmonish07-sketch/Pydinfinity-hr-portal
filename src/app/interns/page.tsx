@@ -64,7 +64,7 @@ export default function InternsPage() {
                 <div className="flex items-start gap-3">
                   <Avatar person={p} size={48} />
                   <div className="min-w-0 flex-1">
-                    <Link href={`/people/${p.id}`} className="block truncate font-semibold hover:text-primary">{fullName(p)}</Link>
+                    <Link href={`/people/view?id=${p.id}`} className="block truncate font-semibold hover:text-primary">{fullName(p)}</Link>
                     <p className="truncate text-sm text-fg-2">{it.college} · {it.course}</p>
                     <p className="font-mono text-xs text-muted">{p.code}</p>
                   </div>
@@ -82,7 +82,7 @@ export default function InternsPage() {
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
                   <Button size="sm" variant="secondary" onClick={() => setOpen(open === p.id ? null : p.id)}>{open === p.id ? "Hide" : "Feedback"}</Button>
                   {can(role, "letters.generate") && <Link href={`/letters?person=${p.id}&template=certificate`}><Button size="sm" variant="soft" icon={Award}>Certificate</Button></Link>}
-                  {can(role, "people.manage") && <Link href={`/people/${p.id}`}><Button size="sm" variant="ghost" icon={Repeat}>Convert</Button></Link>}
+                  {can(role, "people.manage") && <Link href={`/people/view?id=${p.id}`}><Button size="sm" variant="ghost" icon={Repeat}>Convert</Button></Link>}
                 </div>
               </Card>
             );

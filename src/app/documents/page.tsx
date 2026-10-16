@@ -91,14 +91,14 @@ export default function DocumentsPage() {
             {peopleKyc.map(({ p, pct }) => (
               <li key={p.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
                 <Avatar person={p} size={36} />
-                <Link href={`/people/${p.id}`} className="min-w-0 flex-1">
+                <Link href={`/people/view?id=${p.id}`} className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium hover:text-primary">{fullName(p)}</span>
                   <span className="block truncate text-xs text-muted">{p.code ?? "ID pending"}</span>
                 </Link>
                 <div className="hidden w-40 items-center gap-2 sm:flex"><Progress value={pct} tone={pct === 100 ? "success" : "primary"} className="h-1.5" label="KYC" /><span className="w-9 text-right text-xs tabular">{pct}%</span></div>
                 <span className="text-xs font-semibold tabular sm:hidden">{pct}%</span>
                 {verify && pct < 100 && (
-                  <Button size="sm" variant="ghost" icon={Link2} onClick={() => { navigator.clipboard?.writeText(`${location.origin}/kyc/${p.id}`); toast(`Self-service KYC link copied for ${p.firstName}`, "info"); }}>
+                  <Button size="sm" variant="ghost" icon={Link2} onClick={() => { navigator.clipboard?.writeText(`${location.origin}/kyc?id=${p.id}`); toast(`Self-service KYC link copied for ${p.firstName}`, "info"); }}>
                     <span className="hidden md:inline">KYC link</span>
                   </Button>
                 )}

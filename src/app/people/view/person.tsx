@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -49,8 +49,8 @@ const TL_ICON: Record<TimelineEntry["kind"], LucideIcon> = {
   exit: DoorOpen,
 };
 
-export default function PersonPage() {
-  const { id } = useParams<{ id: string }>();
+export function PersonPage() {
+  const id = useSearchParams().get("id") ?? "";
   const router = useRouter();
   const { role, me } = useMe();
   const person = useHR((s) => s.people.find((p) => p.id === id));
@@ -104,9 +104,7 @@ export default function PersonPage() {
 
       {/* Profile header */}
       <Card className="overflow-hidden">
-        <div className="gradient-brand relative h-24 sm:h-32">
-          <div className="bg-grid absolute inset-0 opacity-30" aria-hidden />
-        </div>
+        <div className="aura-hero h-24 rounded-none sm:h-32" />
         <div className="px-4 pb-5 sm:px-6">
           <div className="relative -mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end">
             <span className="w-fit rounded-full bg-surface p-1.5"><Avatar person={person} size={96} /></span>
@@ -187,7 +185,7 @@ export default function PersonPage() {
               <CardHeader title="Reporting" icon={Building2} />
               <div className="p-4">
                 {manager ? (
-                  <Link href={`/people/${manager.id}`} className="flex items-center gap-3 rounded-lg p-2 hover:bg-surface-2">
+                  <Link href={`/people/view?id=${manager.id}`} className="flex items-center gap-3 rounded-lg p-2 hover:bg-surface-2">
                     <Avatar person={manager} size={36} />
                     <span><span className="block text-sm font-medium">{fullName(manager)}</span><span className="block text-xs text-muted">Reports to · {manager.designation}</span></span>
                   </Link>
@@ -197,7 +195,7 @@ export default function PersonPage() {
                     <p className="mt-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted">Direct reports · {reports.length}</p>
                     <div className="mt-2 flex flex-wrap gap-1 px-2">
                       {reports.slice(0, 12).map((r) => (
-                        <Link key={r.id} href={`/people/${r.id}`} title={fullName(r)}><Avatar person={r} size={32} ring /></Link>
+                        <Link key={r.id} href={`/people/view?id=${r.id}`} title={fullName(r)}><Avatar person={r} size={32} ring /></Link>
                       ))}
                     </div>
                   </>
