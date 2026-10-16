@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { buildSeed, DEFAULT_SETTINGS, type SeedData } from "./seed";
 import type {
   Announcement,
@@ -400,7 +400,19 @@ export const useHR = create<HRState>()(
     },
     {
       name: "pyd-hr-data",
-      version: 3,
+      // localStorage holds ~5 MB; photos and resume files can fill it, so never let a failed write crash the app
+      storage: createJSONStorage(() => ({
+        getItem: (k) => localStorage.getItem(k),
+        removeItem: (k) => localStorage.removeItem(k),
+        setItem: (k, v) => {
+          try {
+            localStorage.setItem(k, v);
+          } catch {
+            setTimeout(() => useHR.getState().toast("Browser storage is full — remove a resume file or photo to save new changes", "error"));
+          }
+        },
+      })),
+      version: 4,
       migrate: () => fresh() as never,
       partialize: ({ toasts: _t, ...rest }) => rest,
     }

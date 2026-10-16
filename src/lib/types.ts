@@ -21,14 +21,50 @@ export interface InternDetails {
   feedback: { id: string; date: string; rating: number; note: string; by: string }[];
 }
 
+export type EngagementType = "Project-based" | "Hourly" | "Retainer" | "Contract";
+export type WorkMode = "Remote" | "Onsite" | "Hybrid";
+export type EngagementStatus = "Active" | "Completed" | "Discontinued";
+export type PaymentType = "Bank transfer" | "UPI" | "Cheque";
+export type PaymentFrequency = "Per project" | "Milestone-based" | "Weekly" | "Bi-weekly" | "Monthly";
+
+/** Mirrors the Pydinfinity Solutions LLP "Freelancer Details Form" (sections 2–4 + signature). */
 export interface FreelancerDetails {
+  formId?: string;
+  formDate?: string;
+  // 2. Professional
+  areaOfExpertise?: string;
+  yearsOfExperience?: number;
+  // 3. Work
+  projects: string[]; // Project / Service
+  contactPersonId?: string;
+  engagementType?: EngagementType;
   contractStart: string;
   contractEnd: string;
+  workMode?: WorkMode;
+  workLocation?: string;
+  engagementStatus?: EngagementStatus;
+  // 4. Payment & tax
+  paymentType?: PaymentType;
   rateType: "Hourly" | "Per Project";
   rate: number;
-  skills: string[];
-  projects: string[];
+  paymentFrequency?: PaymentFrequency;
   gstin?: string;
+  skills: string[];
+  signature?: string; // data URL of the drawn signature
+  signedOn?: string;
+}
+
+export interface ResumeEducation { id: string; degree: string; institution: string; year: string; score?: string }
+export interface ResumeExperience { id: string; company: string; role: string; from: string; to?: string; current?: boolean; description?: string }
+export interface ResumeCertification { id: string; name: string; issuer: string; year: string }
+export interface Resume {
+  summary?: string;
+  skills: string[];
+  languages: string[];
+  education: ResumeEducation[];
+  experience: ResumeExperience[];
+  certifications: ResumeCertification[];
+  file?: { name: string; size: number; type: string; dataUrl?: string; uploadedAt: string };
 }
 
 export interface Person {
@@ -51,10 +87,22 @@ export interface Person {
   status: PersonStatus;
   hue: number; // avatar gradient hue
   address: string;
-  emergencyContact: { name: string; phone: string };
+  /** Profile photo as a small JPEG data URL (resized on upload) */
+  photo?: string;
+  location?: string; // city
+  permanentAddress?: string;
+  personalEmail?: string;
+  altPhone?: string;
+  maritalStatus?: "Single" | "Married" | "Prefer not to say";
+  nationality?: string;
+  guardianName?: string; // father / spouse name
+  linkedIn?: string;
+  portfolio?: string;
+  emergencyContact: { name: string; phone: string; relation?: string };
   aadhaarLast4: string;
   pan: string;
-  bank: { name: string; accountLast4: string; ifsc: string };
+  bank: { name: string; accountLast4: string; ifsc: string; accountNumber?: string; holderName?: string; upi?: string };
+  resume?: Resume;
   ctc?: number; // annual, employees
   intern?: InternDetails;
   freelancer?: FreelancerDetails;

@@ -132,7 +132,12 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 /* ------------------------------- Avatar ------------------------------- */
-export function Avatar({ person, size = 36, ring }: { person: Pick<Person, "firstName" | "lastName" | "hue">; size?: number; ring?: boolean }) {
+export function Avatar({ person, size = 36, ring }: { person: Pick<Person, "firstName" | "lastName" | "hue"> & { photo?: string }; size?: number; ring?: boolean }) {
+  if (person.photo)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={person.photo} alt="" width={size} height={size} className={cn("shrink-0 rounded-full object-cover", ring && "ring-2 ring-surface")} style={{ width: size, height: size }} />
+    );
   return (
     <span
       aria-hidden

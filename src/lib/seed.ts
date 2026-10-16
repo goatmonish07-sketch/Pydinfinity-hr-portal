@@ -29,7 +29,7 @@ function rng(seed: number) {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  companyName: "Pydinfinity Solutions",
+  companyName: "Pydinfinity Solutions LLP",
   companyCode: "PYD",
   branches: ["Bengaluru HQ", "Chennai", "Hyderabad", "Remote"],
   departments: ["Engineering", "Design", "Marketing", "Sales", "Finance", "Human Resources", "Operations"],
@@ -114,10 +114,21 @@ export function buildSeed(): SeedData {
       emergencyContact: { name: `${pick(FIRST_F)} ${lastName}`, phone: `+91 9${int(100000000, 999999999)}` },
       aadhaarLast4: String(int(1000, 9999)),
       pan: `${String.fromCharCode(65 + int(0, 25))}${String.fromCharCode(65 + int(0, 25))}${String.fromCharCode(65 + int(0, 25))}P${String.fromCharCode(65 + int(0, 25))}${int(1000, 9999)}${String.fromCharCode(65 + int(0, 25))}`,
-      bank: { name: pick(["HDFC Bank", "ICICI Bank", "State Bank of India", "Axis Bank", "Kotak Bank"]), accountLast4: String(int(1000, 9999)), ifsc: `${pick(["HDFC", "ICIC", "SBIN", "UTIB", "KKBK"])}0${int(100000, 999999)}` },
+      bank: { name: pick(["HDFC Bank", "ICICI Bank", "State Bank of India", "Axis Bank", "Kotak Bank"]), accountLast4: "", ifsc: `${pick(["HDFC", "ICIC", "SBIN", "UTIB", "KKBK"])}0${int(100000, 999999)}` },
+      nationality: "Indian",
+      maritalStatus: r() > 0.55 ? "Married" : "Single",
+      personalEmail: `${firstName}.${lastName.toLowerCase()}${int(10, 99)}@gmail.com`.toLowerCase(),
+      guardianName: `${pick(FIRST_M)} ${lastName}`,
       timeline: [],
       ...opts,
     };
+    const acct = `${int(1000, 9999)}${int(10000000, 99999999)}`;
+    p.bank.accountNumber = acct;
+    p.bank.accountLast4 = acct.slice(-4);
+    p.bank.holderName = `${firstName} ${lastName}`;
+    p.location = p.address.split(", ").pop();
+    p.permanentAddress = p.address;
+    p.emergencyContact.relation = pick(["Mother", "Father", "Spouse", "Sibling"]);
     if (type === "employee") p.ctc = opts.ctc ?? int(4, 28) * 100000;
     p.timeline.push({ id: `t${i}a`, date: p.joiningDate, title: `Joined as ${designation}`, detail: `${dept} · ${p.branch}`, kind: "join" });
     if (p.status !== "Pending Approval") {
@@ -199,7 +210,67 @@ export function buildSeed(): SeedData {
       projects: [pick(["Website redesign", "Social media Q4", "Payment gateway", "Explainer video", "Brand guidelines"])],
       gstin: r() > 0.4 ? `29${p.pan}1Z${int(1, 9)}` : undefined,
     };
+    const f = p.freelancer;
+    f.formId = `PYD-FRM-${String(101 + k).padStart(4, "0")}`;
+    f.formDate = start;
+    f.areaOfExpertise = { Design: "UI/UX & Brand Design", Engineering: "Full-stack Web Development", Marketing: "Content & Performance Marketing" }[dept] ?? dept;
+    f.yearsOfExperience = int(2, 9);
+    f.contactPersonId = leads[dept].id;
+    f.engagementType = f.rateType === "Hourly" ? "Hourly" : pick(["Project-based", "Retainer", "Contract"] as const);
+    f.workMode = pick(["Remote", "Remote", "Hybrid", "Onsite"] as const);
+    f.workLocation = f.workMode === "Remote" ? "Remote" : pick(["Bengaluru HQ", "Chennai", "Hyderabad"]);
+    f.engagementStatus = "Active";
+    f.paymentType = pick(["Bank transfer", "Bank transfer", "UPI"] as const);
+    f.paymentFrequency = f.rateType === "Hourly" ? "Monthly" : pick(["Per project", "Milestone-based"] as const);
+    p.linkedIn = `linkedin.com/in/${p.firstName.toLowerCase()}-${p.lastName.toLowerCase()}`;
   });
+
+  // Resumes
+  const DEPT_SKILLS: Record<string, string[]> = {
+    Engineering: ["React", "TypeScript", "Node.js", "PostgreSQL", "AWS", "Docker", "Python", "System design", "Testing"],
+    Design: ["Figma", "UI design", "UX research", "Prototyping", "Design systems", "Illustration", "Motion"],
+    Marketing: ["SEO", "Google Ads", "Meta Ads", "Copywriting", "Analytics", "Email marketing", "Content strategy"],
+    Sales: ["B2B sales", "Negotiation", "CRM", "Lead generation", "Account management", "Presentations"],
+    Finance: ["Tally", "GST filing", "Excel", "Accounts payable", "Financial reporting", "TDS"],
+    "Human Resources": ["Recruitment", "Payroll", "Employee relations", "HR policies", "Onboarding", "Labour law"],
+    Operations: ["Vendor management", "Process improvement", "Excel", "Facilities", "Procurement", "Leadership"],
+  };
+  const DEGREES: Record<string, string[]> = {
+    Engineering: ["B.Tech Computer Science", "B.E. Information Technology", "M.Tech Software Engineering", "BCA"],
+    Design: ["B.Des Communication Design", "B.Sc Visual Communication", "M.Des Interaction Design"],
+    Marketing: ["MBA Marketing", "BBA", "B.Com", "BA Mass Communication"],
+    Sales: ["MBA Sales & Marketing", "BBA", "B.Com"],
+    Finance: ["B.Com", "M.Com", "CA Inter", "MBA Finance"],
+    "Human Resources": ["MBA HR", "MSW HR", "BBA"],
+    Operations: ["BBA", "MBA Operations", "B.Com"],
+  };
+  const PREV_COS = ["Infosys", "TCS", "Zoho", "Freshworks", "Wipro", "Swiggy", "Razorpay", "HCL Tech", "Chargebee", "Byju's"];
+  for (const p of people) {
+    const pool = DEPT_SKILLS[p.department] ?? DEPT_SKILLS.Operations;
+    const skills = [...new Set([...(p.freelancer?.skills ?? []), ...Array.from({ length: 5 }, () => pick(pool))])].slice(0, 6);
+    const age = Math.floor((Date.now() - new Date(p.dob).getTime()) / (365 * 86_400_000));
+    const gradYear = new Date().getFullYear() - Math.max(age - 22, 0);
+    const prevJobs = p.type === "intern" ? 0 : Math.min(int(0, 3), Math.floor((age - 22) / 3));
+    const experience = [];
+    let cursor = p.joiningDate;
+    for (let j = 0; j < prevJobs; j++) {
+      const to = addDays(cursor, -int(15, 60));
+      const from = addDays(to, -int(300, 1100));
+      experience.push({ id: `ex${p.id}${j}`, company: pick(PREV_COS), role: j === 0 ? p.designation.replace(/^(Senior |Freelance )/, "") : pick(["Associate", "Executive", "Analyst", "Junior " + p.designation.replace(/^(Senior |Freelance )/, "")]), from, to, description: pick(["Delivered features for a high-traffic consumer product.", "Owned client accounts and quarterly targets.", "Built internal tools that cut manual work by 30%.", "Led a small team through two major launches.", "Handled end-to-end process for 200+ employees."]) });
+      cursor = from;
+    }
+    p.resume = {
+      summary: `${p.designation} with ${p.type === "intern" ? "a strong academic foundation" : `${Math.max(age - 22, 1)}+ years of experience`} in ${p.department.toLowerCase()}. Skilled in ${skills.slice(0, 3).join(", ")}.`,
+      skills,
+      languages: ["English", pick(["Tamil", "Kannada", "Telugu", "Hindi", "Malayalam"]), ...(r() > 0.5 ? ["Hindi"] : [])].filter((v, x, a) => a.indexOf(v) === x),
+      education: [
+        { id: `ed${p.id}a`, degree: p.intern?.course ?? pick(DEGREES[p.department] ?? DEGREES.Operations), institution: p.intern?.college ?? pick(COLLEGES), year: String(p.intern ? gradYear + 1 : gradYear), score: `${int(65, 92)}%` },
+        { id: `ed${p.id}b`, degree: "Class XII (Higher Secondary)", institution: pick(["DAV Public School", "Kendriya Vidyalaya", "PSBB", "Chinmaya Vidyalaya", "St. Joseph's"]), year: String(gradYear - 4), score: `${int(70, 96)}%` },
+      ],
+      experience,
+      certifications: r() > 0.45 ? [(([name, issuer]) => ({ id: `ce${p.id}`, name, issuer, year: String(gradYear + int(1, 4)) }))(pick([["AWS Cloud Practitioner", "Amazon Web Services"], ["Google Analytics Certification", "Google"], ["Google UX Design", "Google"], ["Inbound Marketing", "HubSpot Academy"], ["SHRM-CP", "SHRM"], ["Certified ScrumMaster", "Scrum Alliance"]] as const))] : [],
+    };
+  }
 
   // Documents
   const documents: HRDocument[] = [];

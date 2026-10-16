@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: { default: "Pydinfinity HR · Live Demo", template: "%s · Pydinfinity HR" },
   description: "People, IDs, KYC, interns, freelancers, attendance, letters and payroll — one HR workspace for Pydinfinity Solutions.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: { icon: "/pyd-logo.png", apple: "/icon-256.png" },
   appleWebApp: { capable: true, title: "Pydinfinity HR", statusBarStyle: "black-translucent" },
 };
 

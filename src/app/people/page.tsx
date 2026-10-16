@@ -8,7 +8,7 @@ import { can, useHR, useMe } from "@/lib/store";
 import type { PersonStatus, PersonType } from "@/lib/types";
 import { cn, downloadFile, fmtDate, fullName, kycPercent, qp, toCSV, TYPE_LABEL } from "@/lib/utils";
 import { Avatar, Badge, Button, Card, ChipTabs, Empty, PageHeader, Progress, SearchInput, StatusBadge, TableWrap } from "@/components/ui";
-import { PersonFormModal } from "@/components/person-form";
+import { PersonFormModal, blankPerson } from "@/components/person-form";
 
 type TypeFilter = "all" | PersonType;
 const STATUSES: PersonStatus[] = ["Active", "Pending Approval", "Notice Period", "On Hold", "Exited"];
@@ -211,7 +211,7 @@ export default function PeoplePage() {
         </>
       )}
 
-      {adding && <PersonFormModal open onClose={() => setAdding(false)} onSaved={(id) => router.push(`/people/view?id=${id}`)} />}
+      {adding && <PersonFormModal open initial={blankPerson(type === "all" ? "employee" : type)} onClose={() => setAdding(false)} onSaved={(id) => router.push(`/people/view?id=${id}`)} />}
     </div>
   );
 }

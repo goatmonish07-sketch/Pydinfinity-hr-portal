@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Briefcase, Receipt, Wallet, CalendarClock, Plus, Check, IndianRupee } from "lucide-react";
+import { Briefcase, Receipt, Wallet, CalendarClock, Plus, Check, IndianRupee, FileText } from "lucide-react";
 import { useHR } from "@/lib/store";
 import type { Invoice } from "@/lib/types";
 import { daysBetween, fmtDate, fmtINR, fullName, todayISO } from "@/lib/utils";
@@ -30,7 +30,7 @@ export default function FreelancersPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Module 5 · Freelancer Management" title="Freelancers" subtitle="Contracts, invoices (Submitted → Approved → Paid), TDS & GST." actions={<Button icon={Plus} onClick={() => setAdding(true)}>Add invoice</Button>} />
+      <PageHeader eyebrow="Module 5 · Freelancer Management" title="Freelancers" subtitle="Contracts, invoices (Submitted → Approved → Paid), TDS & GST." actions={<><Link href="/people?new=1&type=freelancer"><Button variant="outline" icon={FileText}>New freelancer form</Button></Link><Button icon={Plus} onClick={() => setAdding(true)}>Add invoice</Button></>} />
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard label="Active freelancers" value={freelancers.length} icon={Briefcase} />
@@ -51,10 +51,11 @@ export default function FreelancersPage() {
                     <Avatar person={p} size={40} />
                     <div className="min-w-0">
                       <Link href={`/people/view?id=${p.id}`} className="block truncate text-sm font-semibold hover:text-primary">{fullName(p)}</Link>
-                      <p className="truncate text-xs text-muted">{p.designation} · {p.freelancer!.skills.join(", ")}</p>
+                      <p className="truncate text-xs text-muted">{p.designation} · {[p.freelancer!.engagementType, p.freelancer!.workMode, p.freelancer!.engagementStatus].filter(Boolean).join(" · ")}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 pl-[52px] text-sm sm:pl-0">
+                  <div className="flex flex-wrap items-center gap-2 pl-[52px] text-sm sm:pl-0">
+                    <Link href={`/people/view?id=${p.id}&tab=form`} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line px-3 text-xs font-semibold hover:bg-surface-2"><FileText className="h-3.5 w-3.5" /> Form</Link>
                     <span className="text-xs text-fg-2">{fmtINR(p.freelancer!.rate)}/{p.freelancer!.rateType === "Hourly" ? "hr" : "project"}</span>
                     <Badge tone={l < 0 ? "danger" : l <= 30 ? "warning" : "success"}>{l < 0 ? "Expired" : l <= 30 ? `Renew in ${l}d` : `Till ${fmtDate(p.freelancer!.contractEnd, { day: "2-digit", month: "short" })}`}</Badge>
                   </div>

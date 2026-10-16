@@ -23,6 +23,7 @@ import {
   Laptop,
   Repeat,
   Printer,
+  PenLine,
   DoorOpen,
   type LucideIcon,
 } from "lucide-react";
@@ -35,8 +36,11 @@ import { PersonFormModal } from "@/components/person-form";
 import { IdCard } from "@/components/id-card";
 import { DocumentRow } from "@/components/doc-row";
 import { InternPanel } from "@/components/intern-panel";
+import { PhotoUpload, SignaturePad } from "@/components/photo";
+import { ResumePanel } from "@/components/resume";
+import { FreelancerFormSheet } from "@/components/freelancer-form";
 
-type Tab = "overview" | "documents" | "work" | "timeline";
+type Tab = "overview" | "resume" | "form" | "documents" | "work" | "timeline";
 
 const TL_ICON: Record<TimelineEntry["kind"], LucideIcon> = {
   join: UserCheck,
@@ -63,10 +67,13 @@ export function PersonPage() {
   const approve = useHR((s) => s.approvePerson);
   const update = useHR((s) => s.updatePerson);
   const log = useHR((s) => s.log);
-  const [tab, setTab] = useState<Tab>("overview");
+  const tabParam = useSearchParams().get("tab") as Tab | null;
+  const [tab, setTab] = useState<Tab>(tabParam ?? "overview");
   const [editing, setEditing] = useState(false);
   const [converting, setConverting] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [showAcct, setShowAcct] = useState(false);
 
   useEffect(() => {
     if (person) log("view", `Profile of ${fullName(person)}`);
@@ -93,7 +100,14 @@ export function PersonPage() {
     [Building2, "Department", `${person.department} · ${person.branch}`],
     [CalendarDays, "Joined", fmtDate(person.joiningDate)],
     [Droplet, "Blood group", person.bloodGroup || "—"],
-    [MapPin, "Address", person.address || "—"],
+    [MapPin, "Location", person.location || "—"],
+    [MapPin, "Current address", person.address || "—"],
+    [MapPin, "Permanent address", person.permanentAddress || person.address || "—"],
+    [Mail, "Personal email", person.personalEmail || "—"],
+    [Phone, "Alternate phone", person.altPhone || "—"],
+    [UserCheck, "Father / spouse", person.guardianName || "—"],
+    [CalendarDays, "Date of birth", `${fmtDate(person.dob)} · ${person.gender}`],
+    [BadgeCheck, "Marital status · nationality", [person.maritalStatus, person.nationality].filter(Boolean).join(" · ") || "—"],
   ];
 
   return (
@@ -106,9 +120,9 @@ export function PersonPage() {
       <Card className="overflow-hidden">
         <div className="aura-hero h-24 rounded-none sm:h-32" />
         <div className="px-4 pb-5 sm:px-6">
-          <div className="relative -mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end">
-            <span className="w-fit rounded-full bg-surface p-1.5"><Avatar person={person} size={96} /></span>
-            <div className="min-w-0 flex-1 sm:pb-1">
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start">
+            <span className="-mt-12 w-fit shrink-0 rounded-full bg-surface p-1.5 sm:-mt-14"><PhotoUpload person={person} size={96} editable={manage || isSelf} onChange={(photo) => update(person.id, { photo }, photo ? "Profile photo updated" : "Profile photo removed")} /></span>
+            <div className="min-w-0 flex-1 sm:pt-3">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold">{fullName(person)}</h1>
                 <StatusBadge status={person.status} />
@@ -128,7 +142,7 @@ export function PersonPage() {
                 ))}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 sm:pt-3">
               {person.status === "Pending Approval" && can(role, "ids.issue") && <Button icon={BadgeCheck} onClick={() => approve(person.id)}>Approve & issue ID</Button>}
               {person.code && <Button variant="secondary" icon={IdIcon} onClick={() => setShowCard(true)}>ID card</Button>}
               {person.type === "intern" && manage && person.status !== "Exited" && <Button variant="soft" icon={Repeat} onClick={() => setConverting(true)}>Convert to employee</Button>}
@@ -143,6 +157,8 @@ export function PersonPage() {
         onChange={setTab}
         options={[
           { value: "overview", label: "Overview" },
+          { value: "resume", label: "Resume" },
+          ...(person.type === "freelancer" ? [{ value: "form" as Tab, label: "Freelancer form" }] : []),
           { value: "documents", label: "Documents & KYC", count: docs.length },
           { value: "work", label: person.type === "intern" ? "Internship" : person.type === "freelancer" ? "Contract & invoices" : "Work & leave" },
           { value: "timeline", label: "History", count: person.timeline.length },
@@ -167,8 +183,19 @@ export function PersonPage() {
             <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-3">
               <div><p className="text-xs text-muted">Aadhaar</p><p className="font-mono text-sm font-medium">{person.aadhaarLast4 ? maskAadhaar(person.aadhaarLast4) : "—"}</p></div>
               <div><p className="text-xs text-muted">PAN</p><p className="font-mono text-sm font-medium">{maskPan(person.pan)}</p></div>
-              <div><p className="text-xs text-muted">Bank</p><p className="text-sm font-medium">{person.bank.name ? `${person.bank.name} ••${person.bank.accountLast4}` : "—"}</p></div>
-              <div><p className="text-xs text-muted">Emergency contact</p><p className="text-sm font-medium">{person.emergencyContact.name || "—"}</p><p className="text-xs text-fg-2">{person.emergencyContact.phone}</p></div>
+              <div>
+                <p className="text-xs text-muted">Bank account</p>
+                <p className="text-sm font-medium">{person.bank.name || "—"}</p>
+                <p className="flex items-center gap-2 font-mono text-xs text-fg-2">
+                  {showAcct && person.bank.accountNumber ? person.bank.accountNumber : person.bank.accountLast4 ? `XXXX XXXX ${person.bank.accountLast4}` : "—"}
+                  {(manage || isSelf) && person.bank.accountNumber && (
+                    <button onClick={() => { if (!showAcct) log("view", `Bank account of ${fullName(person)}`); setShowAcct((v) => !v); }} className="font-sans text-[11px] font-semibold text-primary hover:underline">{showAcct ? "Hide" : "Reveal"}</button>
+                  )}
+                </p>
+                <p className="font-mono text-xs text-muted">{[person.bank.ifsc, person.bank.upi].filter(Boolean).join(" · ")}</p>
+              </div>
+              <div><p className="text-xs text-muted">Emergency contact</p><p className="text-sm font-medium">{person.emergencyContact.name || "—"}{person.emergencyContact.relation && <span className="font-normal text-muted"> · {person.emergencyContact.relation}</span>}</p><p className="text-xs text-fg-2">{person.emergencyContact.phone}</p></div>
+              {person.linkedIn && <div><p className="text-xs text-muted">LinkedIn</p><a href={person.linkedIn.startsWith("http") ? person.linkedIn : `https://${person.linkedIn}`} target="_blank" rel="noreferrer" className="break-all text-sm font-medium text-primary hover:underline">{person.linkedIn}</a></div>}
               {person.ctc && (manage || isSelf) && <div><p className="text-xs text-muted">Annual CTC</p><p className="text-sm font-medium">{fmtINR(person.ctc)}</p></div>}
             </div>
           </Card>
@@ -228,6 +255,27 @@ export function PersonPage() {
               </div>
             </Card>
           )}
+        </div>
+      )}
+
+      {tab === "resume" && <ResumePanel person={person} editable={manage || isSelf} />}
+
+      {tab === "form" && person.freelancer && (
+        <div className="space-y-4">
+          <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+            <div>
+              <p className="font-bold">Freelancer Details Form · <span className="font-mono">{person.freelancer.formId ?? "—"}</span></p>
+              <p className="text-sm text-muted">{person.freelancer.signature ? `Signed by the freelancer on ${fmtDate(person.freelancer.signedOn)}` : "Not signed yet"} · fills automatically from the profile</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(manage || isSelf) && <Button variant="outline" icon={Pencil} onClick={() => setEditing(true)}>Edit details</Button>}
+              {(manage || isSelf) && <Button variant="outline" icon={PenLine} onClick={() => setSigning(true)}>{person.freelancer.signature ? "Re-sign" : "Sign form"}</Button>}
+              <Button icon={Printer} onClick={() => { log("download", `Freelancer form of ${fullName(person)}`); window.print(); }}>Print / PDF</Button>
+            </div>
+          </Card>
+          <div className="scroll-thin overflow-x-auto rounded-[var(--radius-card)] bg-surface-3 p-3 sm:p-6">
+            <FreelancerFormSheet person={person} />
+          </div>
         </div>
       )}
 
@@ -309,6 +357,17 @@ export function PersonPage() {
         </Card>
       )}
 
+      <Modal open={signing} onClose={() => setSigning(false)} title="Sign the freelancer form" subtitle="Draw the signature with a finger, stylus or mouse">
+        {signing && (
+          <SignaturePad
+            onCancel={() => setSigning(false)}
+            onSave={(sig) => {
+              update(person.id, { freelancer: { ...person.freelancer!, signature: sig, signedOn: todayISO() } }, "Freelancer form signed");
+              setSigning(false);
+            }}
+          />
+        )}
+      </Modal>
       {editing && <PersonFormModal open personId={person.id} initial={person} onClose={() => setEditing(false)} />}
       {converting && <ConvertModal personId={person.id} onClose={() => setConverting(false)} />}
       <Modal open={showCard} onClose={() => setShowCard(false)} title="ID card" subtitle="Print on CR80 card stock" footer={<><Button variant="secondary" onClick={() => setShowCard(false)}>Close</Button><Button icon={Printer} onClick={() => { log("download", `ID card of ${fullName(person)}`); window.print(); }}>Print</Button></>}>

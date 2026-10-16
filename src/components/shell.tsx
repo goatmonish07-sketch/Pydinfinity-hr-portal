@@ -75,18 +75,8 @@ function useBadges() {
 
 export function BrandMark({ size = 38 }: { size?: number }) {
   return (
-    <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden>
-      <defs>
-        <linearGradient id="pyd-lg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="var(--primary)" />
-          <stop offset="1" stopColor="var(--primary-strong)" />
-        </linearGradient>
-      </defs>
-      <rect width="40" height="40" rx="12" fill="url(#pyd-lg)" />
-      <circle cx="20" cy="21" r="11.5" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="1.5" />
-      <path d="M15 29V12.5h6.2a5.2 5.2 0 0 1 0 10.4H15" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M30 7.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z" fill="var(--accent)" />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/pyd-logo.png" alt="" width={size} height={size} className="shrink-0 rounded-full bg-white shadow-[0_0_0_1px_var(--border)]" style={{ width: size, height: size }} />
   );
 }
 

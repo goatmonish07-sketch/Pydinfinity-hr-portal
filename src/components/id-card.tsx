@@ -23,19 +23,23 @@ export function IdCard({ person }: { person: Person }) {
     <div className="id-card relative flex aspect-[54/86] w-[216px] shrink-0 flex-col overflow-hidden rounded-2xl border border-black/10 bg-white text-[#1f2430] shadow-xl print:shadow-none" style={{ breakInside: "avoid" }}>
       <div className="gradient-brand relative h-[92px] px-4 pt-3 text-white" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}>
         <div className="flex items-center gap-1.5">
-          <span className="grid h-5 w-5 place-items-center rounded-md bg-white/25">
-            <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 19V5h6a4.5 4.5 0 0 1 0 9H9" /></svg>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/pyd-logo.png" alt="" className="h-6 w-6 rounded-full bg-white" />
           <span className="truncate text-[10px] font-bold uppercase tracking-[0.12em]">{company}</span>
         </div>
         <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 rounded-full bg-white p-1">
-          <span
-            className="grid h-[72px] w-[72px] place-items-center rounded-full text-2xl font-bold text-white"
-            style={{ backgroundImage: `linear-gradient(135deg, hsl(${person.hue} 70% 58%), hsl(${(person.hue + 40) % 360} 65% 45%))`, printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}
-          >
-            {person.firstName[0]}
-            {person.lastName[0]}
-          </span>
+          {person.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={person.photo} alt={`Photo of ${fullName(person)}`} className="h-[72px] w-[72px] rounded-full object-cover" />
+          ) : (
+            <span
+              className="grid h-[72px] w-[72px] place-items-center rounded-full text-2xl font-bold text-white"
+              style={{ backgroundImage: `linear-gradient(135deg, hsl(${person.hue} 70% 58%), hsl(${(person.hue + 40) % 360} 65% 45%))`, printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }}
+            >
+              {person.firstName[0]}
+              {person.lastName[0]}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex flex-1 flex-col items-center px-3 pt-11 text-center">

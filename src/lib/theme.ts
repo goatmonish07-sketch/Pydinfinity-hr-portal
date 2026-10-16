@@ -17,7 +17,7 @@ export interface ThemePreset {
 
 export const PRESETS: ThemePreset[] = [
   { id: "emerald", name: "Aura Emerald", light: ["#266244", "#c9973f"], dark: ["#5cb080", "#e2b870"] },
-  { id: "pyd", name: "Pydinfinity Blue", light: ["#1d4ed8", "#38bdf8"], dark: ["#60a5fa", "#7dd3fc"] },
+  { id: "pyd", name: "Pydinfinity Blue", light: ["#0072bc", "#241860"], dark: ["#4fb0ec", "#9d8cf0"] },
   { id: "rose", name: "Boutique Rose", light: ["#a04062", "#c8965a"], dark: ["#e480a4", "#e2b478"] },
   { id: "midnight", name: "Midnight", light: ["#4848a8", "#3f8ea3"], dark: ["#8c8cf0", "#78d2e4"] },
   { id: "ocean", name: "Ocean", light: ["#187084", "#c96f35"], dark: ["#56bed4", "#f0a878"] },

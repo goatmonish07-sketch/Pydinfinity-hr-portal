@@ -18,11 +18,11 @@ See [`design-system/MASTER.md`](design-system/MASTER.md).
 
 | # | Module | Route |
 |---|--------|-------|
-| 1 | People Directory — profiles, smart filters, history timeline | `/people`, `/people/view?id=…` |
+| 1 | People Directory — profiles with **profile photo**, full personal details (location, personal email, alternate phone, father/spouse, marital status, nationality, permanent address, LinkedIn), bank details (account no. masked with audited reveal), **resume** (summary, skills, work experience, education, certifications, languages, PDF/Word file), history timeline | `/people`, `/people/view?id=…&tab=resume` |
 | 2 | Employee ID Generator — `PYD-EMP-26-0001`, atomic per-type/year counter, locked IDs, QR ID cards, bulk print | `/ids` |
-| 3 | Document & KYC Vault — Pending → Uploaded → Verified/Rejected, KYC %, expiry alerts, masked Aadhaar, DPDP consent, self-service link | `/documents`, `/kyc?id=…` |
+| 3 | Document & KYC Vault — Pending → Uploaded → Verified/Rejected, KYC %, expiry alerts, masked Aadhaar, DPDP consent, self-service link | `/documents`, `/kyc?id=…` (self-service onboarding: photo, details, resume, documents, form signature) |
 | 4 | Interns — lifecycle, mentor feedback, certificates, one-click convert (new EMP ID, old INT ID kept) | `/interns` |
-| 5 | Freelancers — contracts, renewal alerts, invoices Submitted → Approved → Paid, TDS/GST, spend | `/freelancers` |
+| 5 | Freelancers — the **Pydinfinity Solutions LLP Freelancer Details Form** (personal, professional, work & payment/tax sections, photo, drawn e-signature, print to PDF), contracts, renewal alerts, invoices Submitted → Approved → Paid, TDS/GST, spend | `/freelancers`, `/people/view?id=…&tab=form` |
 | 6 | Bulk Import / Export — CSV with column mapping & validation; CSV exports | `/import-export` |
 | 7 | Onboarding checklists (HR / IT / Manager) | `/onboarding` |
 | 8 | Attendance & Leave — check-in (geo for field), CL/SL/EL/LOP balances, approvals, calendar, branch holidays | `/attendance` |
